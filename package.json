@@ -1,0 +1,9 @@
+{
+  "name": "promise-serial",
+  "version": "0.0.1",
+  "description": "Run promises in series",
+  "main": "index.js",
+  "dependencies": {
+    "bluebird": "^3.4.1"
+  }
+}
