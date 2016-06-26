@@ -1,9 +1,10 @@
 {
   "name": "promise-serial",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Run promises in series",
   "main": "index.js",
   "dependencies": {
     "bluebird": "^3.4.1"
-  }
+  },
+  "repository": "github:brillout/promise-serial"
 }
