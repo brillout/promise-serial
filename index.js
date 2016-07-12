@@ -2,7 +2,7 @@ const assert = require('assert');
 const Promise = require('bluebird'); Promise.longStackTraces();
 
 
-module.exports = function Promise_serial(promises, {parallelize=1}={}) {
+module.exports = function Promise_serial(promises, {parallelize=1, on_progress=(() =>{})}={}) {
 
     if( ! (parallelize >= 1) ) {
         throw new Error("parallelize option is expected to be greater or equal 1");
@@ -35,12 +35,26 @@ module.exports = function Promise_serial(promises, {parallelize=1}={}) {
 
     var returned_promise = Promise.resolve();
 
+    const promises_count = {
+        total: promises.length,
+        fail: 0,
+        success: 0,
+    };
+
     chunks.forEach(parallelized_promises => {
         const chunk_promise =
             parallelized_promises.length === 1  ?
-                (() => parallelized_promises[0]()) :
-                (() => Promise.all(parallelized_promises.map(p => p()))) ;
+                () => log_promise(parallelized_promises[0]()) :
+                () => Promise.all(parallelized_promises.map(p => log_promise(p()))) ;
         returned_promise = returned_promise.then(chunk_promise);
+
+        function log_promise(p) {
+            p
+            .then(() => promises_count.success++ )
+            .catch(() => promises_count.fail++ )
+            .then(() => on_progress(promises_count) )
+            return p;
+        }
     });
 
     return returned_promise;
