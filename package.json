@@ -1,6 +1,6 @@
 {
-  "name": "promise-serial",
-  "version": "0.0.2",
+  "name": "promise-series",
+  "version": "0.0.3",
   "description": "Run promises in series",
   "main": "index.js",
   "dependencies": {
