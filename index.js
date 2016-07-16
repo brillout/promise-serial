@@ -6,10 +6,26 @@ module.exports = function Promise_serial(promises, {parallelize=1, log_progress}
 
     const on_progress = ! log_progress ? (() =>{}) : ({total, success, fail}) => {
         require('readline').clearLine(process.stdout);
-        process.stdout.write(success+'/'+total+' '+(log_progress.constructor===String?log_progress:''));
-        require('readline').cursorTo(process.stdout, 0);
+        const suffix = log_progress.constructor===String && log_progress || log_progress.constructor===Object && log_progress.suffix || '';
+        const keep_last_line = log_progress.constructor===Object && log_progress.keep_last_line;
+        const keep_all_lines = log_progress.constructor===Object && log_progress.keep_all_lines;
+        process.stdout.write(success+'/'+total+' '+suffix);
         if( total === success + fail ) {
-            require('readline').clearLine(process.stdout);
+            if( keep_last_line || keep_all_lines ) {
+                process.stdout.write('\n');
+            }
+            else {
+                require('readline').cursorTo(process.stdout, 0);
+                require('readline').clearLine(process.stdout);
+            }
+        }
+        else {
+            if( keep_all_lines ) {
+                process.stdout.write('\n');
+            }
+            else {
+                require('readline').cursorTo(process.stdout, 0);
+            }
         }
     };
 
