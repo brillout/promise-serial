@@ -1,5 +1,5 @@
 // example.js
-const Promise_serial = require('./');
+const Promise_serial = require('./dist/index.es5.js');
 
 
 const promises =
