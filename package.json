@@ -1,5 +1,5 @@
 {
-  "name": "promise-series",
+  "name": "promise-serial",
   "version": "0.1.0",
   "description": "Run promises in series",
   "repository": "github:brillout/promise-serial",
