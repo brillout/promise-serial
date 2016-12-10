@@ -11,101 +11,123 @@ module.exports = function Promise_serial(promises) {
     var log_progress = _ref.log_progress;
 
 
-    var on_progress = !log_progress ? function () {} : function (_ref2) {
-        var total = _ref2.total;
-        var success = _ref2.success;
-        var fail = _ref2.fail;
+    validate_input(promises, { parallelize: parallelize });
 
-        require('readline').clearLine(process.stdout);
+    var chunks = build_chunks_of_parralel_promises(promises, parallelize);
+
+    var log = build_logger(promises.length, log_progress);
+
+    var overall_promise = Promise.resolve();
+
+    chunks.forEach(function (chunk) {
+        var chunk_overall_promise = function chunk_overall_promise() {
+            var chunk_promises = chunk.map(function (p) {
+                return log(p());
+            });
+            return chunk_promises.length === 1 ? chunk_promises[0] : Promise.all(chunk_promises);
+        };
+        overall_promise = overall_promise.then(chunk_overall_promise);
+    });
+
+    return overall_promise;
+
+    function build_chunks_of_parralel_promises(promises, parallelize) {
+        var chunks = [];
+
+        var chunk = [];
+        promises.forEach(function (p, i) {
+            chunk.push(p);
+            if (chunk.length >= parallelize || i === promises.length - 1) {
+                chunks.push(Array.from(chunk));
+                chunk.length = 0;
+                assert(chunk.length === 0);
+            }
+        });
+
+        assert(chunks.map(function (c) {
+            return c.length;
+        }).reduce(function (total, len) {
+            return total + len;
+        }, 0) === promises.length);
+        assert(chunks.map(function (c) {
+            return c.length;
+        }).every(function (len) {
+            return 1 <= len && len <= parallelize;
+        }));
+
+        return chunks;
+    }
+
+    function validate_input(promises, _ref2) {
+        var parallelize = _ref2.parallelize;
+
+        if ((promises || 0).constructor !== Array) {
+            throw new Error("input is expected to be an array but got: " + promises);
+        }
+        promises.forEach(function (p, i) {
+            var fct_constructors = [Function];
+            if (typeof AsyncFunction !== "undefined") {
+                fct_constructors.push(AsyncFunction);
+            }
+            if (fct_constructors.indexOf((p || 0).constructor) === -1) {
+                throw new Error("the elements of the input array are expected to be functions but " + i + "-th element is: " + p);
+            }
+            if (p.then) {
+                throw new Error("input array " + i + "-th element is a Promise but it doesn't make sense to already run a Promise before calling Promise_serial");
+            }
+        });
+        if (!(parallelize >= 1)) {
+            throw new Error("parallelize option is expected to be a number greater or equal 1");
+        }
+    }
+
+    function build_logger(total, log_progress) {
+        if (!log_progress) {
+            return function (p) {
+                return p;
+            };
+        }
+
         var suffix = log_progress.constructor === String && log_progress || log_progress.constructor === Object && log_progress.suffix || '';
         var keep_last_line = log_progress.constructor === Object && log_progress.keep_last_line;
         var keep_all_lines = log_progress.constructor === Object && log_progress.keep_all_lines;
-        process.stdout.write(success + '/' + total + ' ' + suffix);
-        if (total === success + fail) {
-            if (keep_last_line || keep_all_lines) {
-                process.stdout.write('\n');
-            } else {
-                require('readline').cursorTo(process.stdout, 0);
-                require('readline').clearLine(process.stdout);
-            }
-        } else {
-            if (keep_all_lines) {
-                process.stdout.write('\n');
-            } else {
-                require('readline').cursorTo(process.stdout, 0);
-            }
-        }
-    };
 
-    if (!(parallelize >= 1)) {
-        throw new Error("parallelize option is expected to be greater or equal 1");
-    }
-    if ((promises || 0).constructor !== Array) {
-        throw new Error("input is expected to be an array but got: " + promises);
-    }
-    promises.forEach(function (p, i) {
-        if ((p || 0).constructor !== Function) {
-            throw new Error("the elements of the input array are expected to be functions but " + i + "-th element is: " + p);
-        }
-        if (p.then) {
-            throw new Error("input array " + i + "-th element is a Promise but it doesn't make sense to already run a Promise before calling Promise_serial");
-        }
-    });
+        var done = 0;
 
-    var chunks = [];
-    var chunk = [];
-    promises.forEach(function (p, i) {
-        chunk.push(p);
-        if (chunk.length >= parallelize || i === promises.length - 1) {
-            chunks.push(Array.from(chunk));
-            chunk.length = 0;
-            assert(chunk.length === 0);
-        }
-    });
+        start_log();
 
-    assert(chunks.map(function (c) {
-        return c.length;
-    }).reduce(function (total, len) {
-        return total + len;
-    }, 0) === promises.length);
-    assert(chunks.map(function (c) {
-        return c.length;
-    }).every(function (len) {
-        return 1 <= len && len <= parallelize;
-    }));
+        return log;
 
-    var returned_promise = Promise.resolve();
-
-    var promises_count = {
-        total: promises.length,
-        fail: 0,
-        success: 0
-    };
-
-    on_progress(promises_count);
-
-    chunks.forEach(function (parallelized_promises) {
-        var chunk_promise = parallelized_promises.length === 1 ? function () {
-            return log_promise(parallelized_promises[0]());
-        } : function () {
-            return Promise.all(parallelized_promises.map(function (p) {
-                return log_promise(p());
-            }));
-        };
-        returned_promise = returned_promise.then(chunk_promise);
-
-        function log_promise(p) {
-            p.then(function () {
-                return promises_count.success++;
-            }).catch(function () {
-                return promises_count.fail++;
-            }).then(function () {
-                return on_progress(promises_count);
+        function log(p) {
+            p.finally(function () {
+                done++;
+                logger();
             });
             return p;
         }
-    });
 
-    return returned_promise;
+        function start_log() {
+            logger();
+        }
+
+        function logger() {
+            require('readline').clearLine(process.stdout);
+            process.stdout.write(done + '/' + total + ' ' + suffix);
+            if (total === done) {
+                if (keep_last_line || keep_all_lines) {
+                    process.stdout.write('\n');
+                } else {
+                    require('readline').cursorTo(process.stdout, 0);
+                    require('readline').clearLine(process.stdout);
+                }
+            } else {
+                if (keep_all_lines) {
+                    process.stdout.write('\n');
+                } else {
+                    require('readline').cursorTo(process.stdout, 0);
+                }
+            }
+        }
+    }
 };
 
