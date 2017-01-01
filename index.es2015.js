@@ -12,16 +12,23 @@ module.exports = function Promise_serial(promises, {parallelize=1, log_progress}
 
     let overall_promise = Promise.resolve();
 
+    let output = [];
     chunks.forEach(chunk => {
         const chunk_overall_promise = () => {
             const chunk_promises = chunk.map(p => log(p()))
-            return (
+            let chunk_overall_promise = (
                 chunk_promises.length === 1 ?
-                    chunk_promises[0] :
+                    chunk_promises[0].then(result => [result]) :
                     Promise.all(chunk_promises)
-            );
+                );
+                chunk_overall_promise = chunk_overall_promise.then(result => {output = output.concat(result)});
+                return chunk_overall_promise;
         };
         overall_promise = overall_promise.then(chunk_overall_promise);
+    });
+    overall_promise = overall_promise.then(() => {
+        assert(output.length===promises.length);
+        return output;
     });
 
     return overall_promise;

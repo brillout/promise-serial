@@ -10,7 +10,7 @@ const promises =
             setTimeout(
                 () => {
                     console.log('promise '+i+' end');
-                    resolve();
+                    resolve('output-'+i);
                 },
                 500
             );
@@ -24,7 +24,10 @@ Promise_serial(promises)
     console.log('### Run promises in series of 5')
     return Promise_serial(promises, {parallelize: 5});
 })
-.then(() => {
+.then(output => {
     console.log('### Run promises in series of 10')
-    return Promise_serial(promises, {parallelize: 10});
+    return (
+        Promise_serial(promises, {parallelize: 10})
+        .then(output => {console.log('Resolved values: '+JSON.stringify(output))})
+    );
 });

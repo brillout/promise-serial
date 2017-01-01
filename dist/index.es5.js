@@ -19,14 +19,25 @@ module.exports = function Promise_serial(promises) {
 
     var overall_promise = Promise.resolve();
 
+    var output = [];
     chunks.forEach(function (chunk) {
         var chunk_overall_promise = function chunk_overall_promise() {
             var chunk_promises = chunk.map(function (p) {
                 return log(p());
             });
-            return chunk_promises.length === 1 ? chunk_promises[0] : Promise.all(chunk_promises);
+            var chunk_overall_promise = chunk_promises.length === 1 ? chunk_promises[0].then(function (result) {
+                return [result];
+            }) : Promise.all(chunk_promises);
+            chunk_overall_promise = chunk_overall_promise.then(function (result) {
+                output = output.concat(result);
+            });
+            return chunk_overall_promise;
         };
         overall_promise = overall_promise.then(chunk_overall_promise);
+    });
+    overall_promise = overall_promise.then(function () {
+        assert(output.length === promises.length);
+        return output;
     });
 
     return overall_promise;
