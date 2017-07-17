@@ -101,15 +101,18 @@ module.exports = function Promise_serial(promises, {parallelize=1, log_progress}
         }
 
         function logger() {
-            require('readline').clearLine(process.stdout);
+            //make webpack not try to bundle readline
+            const readline = eval("require('readline')");
+
+            readline.clearLine(process.stdout);
             process.stdout.write(done+'/'+total+' '+suffix);
             if( total === done ) {
                 if( keep_last_line || keep_all_lines ) {
                     process.stdout.write('\n');
                 }
                 else {
-                    require('readline').cursorTo(process.stdout, 0);
-                    require('readline').clearLine(process.stdout);
+                    readline.cursorTo(process.stdout, 0);
+                    readline.clearLine(process.stdout);
                 }
             }
             else {
@@ -117,7 +120,7 @@ module.exports = function Promise_serial(promises, {parallelize=1, log_progress}
                     process.stdout.write('\n');
                 }
                 else {
-                    require('readline').cursorTo(process.stdout, 0);
+                    readline.cursorTo(process.stdout, 0);
                 }
             }
         }

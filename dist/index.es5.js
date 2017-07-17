@@ -4,12 +4,10 @@ var assert = require('assert');
 var Promise = require('bluebird');Promise.longStackTraces();
 
 module.exports = function Promise_serial(promises) {
-    var _ref = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-    var _ref$parallelize = _ref.parallelize;
-    var parallelize = _ref$parallelize === undefined ? 1 : _ref$parallelize;
-    var log_progress = _ref.log_progress;
-
+    var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
+        _ref$parallelize = _ref.parallelize,
+        parallelize = _ref$parallelize === undefined ? 1 : _ref$parallelize,
+        log_progress = _ref.log_progress;
 
     validate_input(promises, { parallelize: parallelize });
 
@@ -122,20 +120,23 @@ module.exports = function Promise_serial(promises) {
         }
 
         function logger() {
-            require('readline').clearLine(process.stdout);
+            //avoid webpack to try to bundle readline
+            var readline = eval("require('readline')");
+
+            readline.clearLine(process.stdout);
             process.stdout.write(done + '/' + total + ' ' + suffix);
             if (total === done) {
                 if (keep_last_line || keep_all_lines) {
                     process.stdout.write('\n');
                 } else {
-                    require('readline').cursorTo(process.stdout, 0);
-                    require('readline').clearLine(process.stdout);
+                    readline.cursorTo(process.stdout, 0);
+                    readline.clearLine(process.stdout);
                 }
             } else {
                 if (keep_all_lines) {
                     process.stdout.write('\n');
                 } else {
-                    require('readline').cursorTo(process.stdout, 0);
+                    readline.cursorTo(process.stdout, 0);
                 }
             }
         }
