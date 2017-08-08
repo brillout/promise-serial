@@ -74,11 +74,7 @@ module.exports = function Promise_serial(promises) {
             throw new Error("input is expected to be an array but got: " + promises);
         }
         promises.forEach(function (p, i) {
-            var fct_constructors = [Function];
-            if (typeof AsyncFunction !== "undefined") {
-                fct_constructors.push(AsyncFunction);
-            }
-            if (fct_constructors.indexOf((p || 0).constructor) === -1) {
+            if (!(p instanceof Function)) {
                 throw new Error("the elements of the input array are expected to be functions but " + i + "-th element is: " + p);
             }
             if (p.then) {
@@ -120,7 +116,7 @@ module.exports = function Promise_serial(promises) {
         }
 
         function logger() {
-            //avoid webpack to try to bundle readline
+            //make webpack not try to bundle readline
             var readline = eval("require('readline')");
 
             readline.clearLine(process.stdout);

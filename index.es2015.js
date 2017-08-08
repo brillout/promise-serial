@@ -57,7 +57,7 @@ module.exports = function Promise_serial(promises, {parallelize=1, log_progress}
             throw new Error("input is expected to be an array but got: "+promises);
         }
         promises.forEach((p, i) => {
-            if( !((p||0).constructor instanceof Function) ) {
+            if( !(p instanceof Function) ) {
                 throw new Error("the elements of the input array are expected to be functions but "+i+"-th element is: "+p);
             }
             if( p.then ) {

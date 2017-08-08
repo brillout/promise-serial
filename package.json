@@ -1,6 +1,6 @@
 {
   "name": "promise-serial",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Run promises in series",
   "repository": "github:brillout/promise-serial",
   "main": "dist/index.es5.js",
