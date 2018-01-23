@@ -1,5 +1,4 @@
 const assert = require('assert');
-const Promise = require('bluebird'); Promise.longStackTraces();
 
 
 module.exports = function Promise_serial(promises, {parallelize=1, log_progress}={}) {
@@ -33,7 +32,7 @@ module.exports = function Promise_serial(promises, {parallelize=1, log_progress}
 
     return overall_promise;
 
-    function build_chunks_of_parralel_promises(promises, parallelize) { 
+    function build_chunks_of_parralel_promises(promises, parallelize) {
         const chunks = [];
 
         const chunk = [];
@@ -50,9 +49,9 @@ module.exports = function Promise_serial(promises, {parallelize=1, log_progress}
         assert(chunks.map(c => c.length).every(len => 1 <= len && len<=parallelize));
 
         return chunks;
-    } 
+    }
 
-    function validate_input(promises, {parallelize}) { 
+    function validate_input(promises, {parallelize}) {
         if( (promises||0).constructor !== Array ) {
             throw new Error("input is expected to be an array but got: "+promises);
         }
@@ -67,9 +66,9 @@ module.exports = function Promise_serial(promises, {parallelize=1, log_progress}
         if( ! (parallelize >= 1) ) {
             throw new Error("parallelize option is expected to be a number greater or equal 1");
         }
-    } 
+    }
 
-    function build_logger(total, log_progress) { 
+    function build_logger(total, log_progress) {
         if( ! log_progress ) {
             return (p => p);
         }
@@ -120,7 +119,7 @@ module.exports = function Promise_serial(promises, {parallelize=1, log_progress}
                 }
             }
         }
-    } 
+    }
 
 };
 
