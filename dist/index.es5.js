@@ -1,7 +1,6 @@
-'use strict';
+"use strict";
 
 var assert = require('assert');
-var Promise = require('bluebird');Promise.longStackTraces();
 
 module.exports = function Promise_serial(promises) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
